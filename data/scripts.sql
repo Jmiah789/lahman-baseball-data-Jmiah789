@@ -51,7 +51,7 @@ inner join schools as s
 on cp.schoolid = s.schoolid
 where s.schoolid = 'vandy'
 
-SELECT  s.playerid, namegiven, namefirst, namelast, sum(salary)
+SELECT  s.playerid, namegiven, namefirst, namelast, sum(salary) as salary
 from (SELECT DISTINCT cp.playerid as playerid, namegiven, namefirst, namelast, s.schoolid, s.schoolname
 		From people as p
 		inner join collegeplaying as cp
@@ -77,7 +77,7 @@ SELECT po,
 from fielding
 where yearid = 2016;
 
-Select position_group, sum(po)
+Select position_group, sum(po) as total_putouts
 FROM (SELECT po,
 	case when pos = 'OF' then 'Outfield'
 		when pos in ('SS', '1B', '2B', '3B') then 'Infield'
@@ -92,8 +92,8 @@ Round the numbers you report to 2 decimal places.
 Do the same for home runs per game. 
 Do you see any trends?*/
 
-select decade, avg(so)
-from batting
+select case when yearid between 1920 and 1929
+
 
 
 /*Find the player who had the most success stealing bases in 2016, 
@@ -101,12 +101,13 @@ where success is measured as the percentage of stolen base attempts which are su
 (A stolen base attempt results either in a stolen base or being caught stealing.) 
 Consider only players who attempted at least 20 stolen bases.*/
 
-SELECT playerid, sum(sb) as total_stolen
+SELECT playerid, sum(sb+cs) as steal_attempts, sum(sb) as succesful_steals,
+	round(sum(cast(sb as numeric))/sum(cast(sb as numeric)+cast(cs as numeric)),2) as success_rate
 from batting
+where yearid = 2016
 group by playerid
-order by total_stolen desc;
-
-
+having sum(sb+cs) >= 20
+order by success_rate desc;
 
 
 /*From 1970 – 2016, what is the largest number of wins for a team that did not win the world series? 
@@ -116,6 +117,13 @@ determine why this is the case. Then redo your query, excluding the problem year
 How often from 1970 – 2016 was it the case that a team with the most wins also won the world series? 
 What percentage of the time?*/
 
+
+SELECT yearid, teamid,
+	max(w) over (partition by yearid,teamid),
+	wswin
+from teams
+where yearid between 1970 and 2016 
+order by yearid,  wswin desc;
 
 /*Using the attendance figures from the homegames table, 
 find the teams and parks which had the top 5 average attendance per game in 2016 
@@ -128,6 +136,7 @@ FROM homegames
 GROUP BY team
 ORDER BY 
 
+..
 /*Which managers have won the TSN Manager of the Year award in both the National League (NL) 
 and the American League (AL)? 
 Give their full name and the teams that they were managing when they won the award.*/
